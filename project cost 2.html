@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Cost Calculator</title>
+    <script>
+        function calculateCost() {
+            const priceTable = [
+                {range: [12, 23], prices: [2.55, 2.95, 3.55, 4.55]},
+                {range: [24, 48], prices: [1.75, 2.25, 2.75, 3.25, 3.75, 4.25, 4.75, 5.25, 5.75, 6.25, 6.75, 7.25]},
+                {range: [49, 143], prices: [1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 3, 3.3, 3.6, 3.9, 4.2, 4.5]},
+                {range: [144, 575], prices: [0.9, 1.05, 1.15, 1.35, 1.55, 1.75, 1.95, 2.15, 2.35, 2.6, 2.9, 3.2]},
+                {range: [576, 1727], prices: [0.65, 0.8, 0.95, 1.1, 1.25, 1.4, 1.55, 1.7, 1.85, 2, 2.15, 2.3]},
+                {range: [1728, 5003], prices: [0.55, 0.65, 0.75, 0.85, 0.95, 1.05, 1.15, 1.25, 1.35, 1.45, 1.55, 1.65]},
+                {range: [5004, Infinity], prices: [0.45, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9, 0.95, 1.1, 1.25, 1.4, 1.55]}
+            ];
+
+            const pieces = parseInt(document.getElementById('pieces').value);
+            const colors = parseInt(document.getElementById('colors').value) - 1;
+            const garmentColor = document.querySelector('input[name="garmentColor"]:checked').value;
+            const inkType = document.querySelector('input[name="inkType"]:checked').value;
+            const minInkTypePieces = 144;
+
+            let cost = "Invalid input";
+            let printCost = 0;
+            let setupCost = 0;
+            let darkGarmentCost = 0;
+            let inkTypeCost = 0;
+            let setupCostBreakdown = '';
+            let darkGarmentCostBreakdown = '';
+            let inkTypeCostBreakdown = '';
+
+            for (let i = 0; i < priceTable.length; i++) {
+                if (pieces >= priceTable[i].range[0] && pieces <= priceTable[i].range[1]) {
+                    printCost = priceTable[i].prices[colors] * pieces;
+                    if (garmentColor === 'light') {
+                        setupCost = 15 * (colors + 1);
+                        setupCostBreakdown = `${colors + 1} colors x $15/color = $${setupCost.toFixed(2)}`;
+                    } else {
+                        setupCost = 30 * (colors + 1) + (i * 15);
+                        setupCostBreakdown = `${colors + 1} colors x $30/color = $${(30 * (colors + 1)).toFixed(2)} + ${i} setup charge x $15/charge = $${(i * 15).toFixed(2)} = $${setupCost.toFixed(2)}`;
+                    }
+
+                    if (inkType === 'cmyk' && pieces >= minInkTypePieces) {
+                        inkTypeCost = 25 * (colors + 1);
+                        inkTypeCostBreakdown = `${colors + 1} colors x $25/color = $${inkTypeCost.toFixed(2)}`;
+                        setupCost = inkTypeCost;
+                    }
+
+                    cost = printCost + setupCost;
+                    if (garmentColor === 'dark') {
+                        darkGarmentCost = 0.15 * pieces + 15;
+                        darkGarmentCostBreakdown = `Dark garment fee = $0.15/piece x ${pieces} pieces + $15 = $${darkGarmentCost.toFixed(2)}`;
+                        cost += darkGarmentCost;
+                    }
+
+                    document.getElementById('result').innerText = 'Total cost: $' + cost.toFixed(2);
+                    document.getElementById('printCost').innerText = `Print cost: ${pieces} pieces x $${priceTable[i].prices[colors]}/piece/color = $${printCost.toFixed(2)}`;
+                    document.getElementById('setupCost').innerText = `Setup cost: ${setupCostBreakdown}`;
+                    if (garmentColor === 'dark') {
+                        document.getElementById('darkGarmentCost').innerText = darkGarmentCostBreakdown;
+                    } else {
+                        document.getElementById('darkGarmentCost').innerText = '';
+                    }
+                    document.getElementById('inkTypeCost').innerText = `Ink type cost: ${inkTypeCostBreakdown}`;
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('pieces').addEventListener('input', calculateCost);
+            document.getElementById('colors').addEventListener('input', calculateCost);
+            document.getElementById('light').addEventListener('input', calculateCost);
+            document.getElementById('dark').addEventListener('input', calculateCost);
+            document.getElementById('standard').addEventListener('input', calculateCost);
+            document.getElementById('cmyk').addEventListener('input', calculateCost);
+        });
+    </script>
+</head>
+<body>
+    <h1>Project Cost Calculator</h1>
+    <p>This calculator has been developed by the Promos Ink Developer team. Unauthorized use without express permission is strictly prohibited.</p>
+    <form onsubmit="event.preventDefault(); calculateCost();">
+        <label for="pieces">Number of pieces:</label>
+        <input type="number" id="pieces" name="pieces" min="1" required>
+        <br>
+        <label for="colors">Number of colors:</label>
+        <input type="number" id="colors" name="colors" min="1" max="12" required>
+        <br>
+        <p>Garment color:</p>
+        <input type="radio" id="light" name="garmentColor" value="light" checked>
+        <label for="light">Light</label>
+        <input type="radio" id="dark" name="garmentColor" value="dark">
+        <label for="dark">Dark</label>
+        <br>
+        <p>Ink type:</p>
+        <input type="radio" id="standard" name="inkType" value="standard" checked>
+        <label for="standard">Standard</label>
+        <input type="radio" id="cmyk" name="inkType" value="cmyk">
+        <label for="cmyk">CMYK, Process, or Water Base</label>
+        <br>
+    </form>
+    <div>
+        <p id="result"></p>
+        <p id="printCost"></p>
+        <p id="setupCost"></p>
+        <p id="darkGarmentCost"></p>
+        <p id="inkTypeCost"></p>
+    </div>
+    <p><small><strong>Disclaimer:</strong> CMYK, Process & Water Base Set up fees - $25.00 per color per location with a minimum of 144 pieces.</small></p>
+</body>
+</html>
+
+
